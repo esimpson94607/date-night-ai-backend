@@ -32,33 +32,37 @@ class Profile(BaseModel):
     spouseSex: str
     spouseEmail: str
 
-def generate_ideas_with_openai(profile: dict) -> List[str]:
+def generate_strict_interest_ideas(profile: dict) -> List[str]:
     prompt = f"""
-    Create 3 detailed and creative monthly date night ideas for a couple based on:
-    - Location: {profile['location']}
-    - Interests: {profile['interests']}
-    - Needs babysitter or pet sitter: {profile['needsSitter']}
-    - Ages: {profile['age']} and {profile['spouseAge']}
+    Generate 3 creative, real-world date night ideas for a couple in {profile['location']}.
+    
+    Only use the following interests to inspire the date ideas: {profile['interests']}.
+    Do not include any suggestions that are unrelated to these interests.
+    
+    Each suggestion must:
+    - Match at least one keyword from the interest list
+    - Mention a real place, business, or event in the area
+    - Include a brief 1–2 sentence description
+    - End with a working URL (Yelp, Google Maps, or the official site)
 
-    Each idea should be 1–2 sentences, vivid and practical for their city.
-    Use varied tones: romantic, playful, or relaxing.
+    Output each idea as a numbered item, one per line.
     """
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{ "role": "user", "content": prompt }],
-        temperature=0.85
+        temperature=0.8
     )
     return response.choices[0].message.content.strip().split("\n")
 
 @app.post("/get-date-ideas")
 async def get_date_ideas(profile: Profile):
     try:
-        suggestions = generate_ideas_with_openai(profile.dict())
+        suggestions = generate_strict_interest_ideas(profile.dict())
         return { "suggestions": suggestions }
     except Exception as e:
         return { "error": str(e), "suggestions": [
-            "🌇 Rooftop tapas & jazz night with skyline views.",
-            "🌿 A guided sunset hike followed by gourmet food truck dinner.",
-            "🎭 Local improv show and dessert at a late-night cafe."
+            "1. Sushi at Ozumo – Sleek vibe with premium sashimi and sake flights. https://ozumo.com",
+            "2. Hike at Alum Rock Park – A peaceful sunrise trail experience. https://goo.gl/maps/...",
+            "3. Live jazz at Cafe Stritch – Downtown music & cocktails. https://cafestritch.com"
         ]}
