@@ -33,19 +33,26 @@ class Profile(BaseModel):
     spouseEmail: str
     spouseInterests: str
 
-def generate_strict_interest_ideas(profile: dict) -> List[str]:
+def generate_itineraries(profile: dict) -> List[str]:
     prompt = f"""
-    Generate 3 creative and real date night ideas for a couple in {profile['location']}.
-    Only use the following combined interests as a guide: {profile['interests']}, {profile['spouseInterests']}.
-    Do not include any ideas that aren't directly related to these interests.
+    Generate 3 real-world, location-specific date night itineraries for a couple in {profile['location']}.
+    Use these shared interests only: {profile['interests']}, {profile['spouseInterests']}.
 
-    Each suggestion must:
-    - Match at least one interest from the list
-    - Mention a real venue or event in the city
-    - Include a 1–2 sentence description
-    - End with a working URL (Yelp, Google Maps, or the venue’s site)
+    Each itinerary must:
+    - Include a title (e.g., "Sushi & Sunset")
+    - Be realistic and tailored to the city
+    - Include 2–3 specific steps or stops in the order they'll happen
+    - Clearly state the total duration ("2 hours" or "4–5 hours")
+    - Only use real places/events
+    - Include working links to Yelp, Google Maps, or official sites
 
-    Return each on a new line.
+    Format:
+    1. [Title] – [Duration]
+    [Step 1 description]
+    [Step 2 description]
+    [Links]
+
+    Return each on its own line.
     """
 
     response = openai.ChatCompletion.create(
@@ -58,11 +65,11 @@ def generate_strict_interest_ideas(profile: dict) -> List[str]:
 @app.post("/get-date-ideas")
 async def get_date_ideas(profile: Profile):
     try:
-        suggestions = generate_strict_interest_ideas(profile.dict())
+        suggestions = generate_itineraries(profile.dict())
         return { "suggestions": suggestions }
     except Exception as e:
         return { "error": str(e), "suggestions": [
-            "1. Sushi at Ozumo – Sleek vibe with premium sashimi and sake flights. https://ozumo.com",
-            "2. Hike at Alum Rock Park – A peaceful sunrise trail experience. https://goo.gl/maps/...",
-            "3. Live jazz at Cafe Stritch – Downtown music & cocktails. https://cafestritch.com"
+            "1. Sushi & Sunset – 2 hours\nDinner at Ozumo followed by a sunset stroll through the San Jose Municipal Rose Garden.\nhttps://ozumo.com | https://goo.gl/maps/rose-garden",
+            "2. Jazz & Art Night – 4–5 hours\nVisit San Jose Museum of Art, then enjoy cocktails and live music at Cafe Stritch.\nhttps://sjmusart.org | https://cafestritch.com",
+            "3. Outdoor & Ramen – 2 hours\nShort hike at Alum Rock Park followed by ramen at Ramen Nagi.\nhttps://goo.gl/maps/alum-rock | https://ramennagiusa.com"
         ]}
