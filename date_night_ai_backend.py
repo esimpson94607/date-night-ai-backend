@@ -31,21 +31,21 @@ class Profile(BaseModel):
     spouseAge: int
     spouseSex: str
     spouseEmail: str
+    spouseInterests: str
 
 def generate_strict_interest_ideas(profile: dict) -> List[str]:
     prompt = f"""
-    Generate 3 creative, real-world date night ideas for a couple in {profile['location']}.
-    
-    Only use the following interests to inspire the date ideas: {profile['interests']}.
-    Do not include any suggestions that are unrelated to these interests.
-    
-    Each suggestion must:
-    - Match at least one keyword from the interest list
-    - Mention a real place, business, or event in the area
-    - Include a brief 1–2 sentence description
-    - End with a working URL (Yelp, Google Maps, or the official site)
+    Generate 3 creative and real date night ideas for a couple in {profile['location']}.
+    Only use the following combined interests as a guide: {profile['interests']}, {profile['spouseInterests']}.
+    Do not include any ideas that aren't directly related to these interests.
 
-    Output each idea as a numbered item, one per line.
+    Each suggestion must:
+    - Match at least one interest from the list
+    - Mention a real venue or event in the city
+    - Include a 1–2 sentence description
+    - End with a working URL (Yelp, Google Maps, or the venue’s site)
+
+    Return each on a new line.
     """
 
     response = openai.ChatCompletion.create(
